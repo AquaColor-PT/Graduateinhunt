@@ -1,0 +1,52 @@
+.form-section {
+  padding: 40px 0;
+  background-color: #ffffff;
+}
+
+.form-section .container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 15px; /* add some horizontal padding */
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* a bit more spacing */
+  width: 100%;
+}
+
+form label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block; /* ensure label is block */
+}
+
+form select,
+form input,
+form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: block; /* ensure block for inputs */
+}
+
+form button {
+  width: fit-content;
+  align-self: flex-start;
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  background-color: #0066cc;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+form button:hover {
+  background-color: #0052a3;
+}

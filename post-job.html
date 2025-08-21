@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recruiter Dashboard - Graduateinhunt</title>
+<style>
+  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
+  header { background:#0066cc; color:white; padding:20px 0; }
+  .container { width:90%; max-width:900px; margin:0 auto; }
+  nav ul { list-style:none; display:flex; justify-content:flex-end; gap:20px; padding:0; }
+  nav ul li a { color:white; text-decoration:none; font-weight:bold; }
+  section { padding:40px 0; }
+  #authBox { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+  #authBox input { padding:10px; border:1px solid #ccc; border-radius:5px; width:100%; }
+  .auth-buttons { display:flex; gap:10px; flex-wrap:wrap; }
+  .auth-buttons button { flex:1; padding:10px; border:none; border-radius:5px; cursor:pointer; background:#0066cc; color:#fff; }
+  .auth-buttons button:hover { background:#0052a3; }
+  form { display:flex; flex-direction:column; gap:15px; padding:20px; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+  input, select, textarea { padding:10px; border:1px solid #ccc; border-radius:5px; width:100%; }
+  button.postJob { background:#28a745; color:#fff; }
+  button.postJob:hover { background:#218838; }
+  #jobList { list-style:none; padding:0; margin-top:20px; }
+  .job-card { background:white; padding:15px; margin-bottom:10px; border-radius:5px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+  .job-card button { margin-left:5px; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+  .job-card button.toggle { background:#28a745; color:#fff; }
+  .job-card button.viewApps { background:#17a2b8; color:#fff; }
+  .job-card button.delete { background:#dc3545; color:#fff; }
+  .hidden { display:none; }
+  .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+  .modal-content { background:white; padding:20px; border-radius:8px; max-width:500px; width:90%; display:flex; flex-direction:column; gap:10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>Graduateinhunt - Recruiter</h1>
+    <nav>
+      <ul>
+        <li><a href="homepage.html">Home</a></li>
+        <li><a href="browse-jobs.html">Browse Jobs</a></li>
+        <li><a href="post-job.html">Post a Job</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<section class="container">
+
+  <!-- Auth Section -->
+  <div id="authBox">
+    <h3>Recruiter Account</h3>
+    <input type="email" id="email" placeholder="Email" required/>
+    <input type="password" id="password" placeholder="Password" required/>
+    <div class="auth-buttons">
+      <button id="registerBtn">Register</button>
+      <button id="loginBtn">Login</button>
+      <button id="forgotBtn">Forgot Password</button>
+      <button id="logoutBtn" class="hidden">Logout</button>
+    </div>
+  </div>
+
+  <!-- Post Job Form -->
+  <form id="jobForm" class="hidden">
+    <input type="text" id="jobTitle" placeholder="Job Title" required/>
+    <input type="text" id="company" placeholder="Company Name" required/>
+    <input type="text" id="location" placeholder="Location" required/>
+    <select id="jobType" required>
+      <option value="">-- Select Type --</option>
+      <option value="Internship">Internship</option>
+      <option value="Learnership">Learnership</option>
+      <option value="Training Program">Training Program</option>
+      <option value="Permanent (No Experience)">Permanent (No Experience)</option>
+    </select>
+    <textarea id="description" placeholder="Job Description" rows="4" required></textarea>
+    <button type="submit" class="postJob">Post Job</button>
+  </form>
+  
+  <h3>Your Posted Jobs</h3>
+  <ul id="jobList"></ul>
+
+</section>
+
+<!-- Applications Modal -->
+<div id="appModal" class="modal">
+  <div class="modal-content">
+    <h3>Applications</h3>
+    <ul id="applicationsList"></ul>
+    <button onclick="document.getElementById('appModal').style.display='none'">Close</button>
+  </div>
+</div>
+
+<script type="module">
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  deleteDoc, 
+  updateDoc, 
+  doc, 
+  onSnapshot, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAyIVMDstj2KWRvj1cHv0x0JCMVRWMteAw",
+  authDomain: "graduateinhunt.firebaseapp.com",
+  projectId: "graduateinhunt",
+  storageBucket: "graduateinhunt.appspot.com",
+  messagingSenderId: "49490866745",
+  appId: "1:49490866745:web:af75f8ab6fc4adf3cb53e8",
+  measurementId: "G-NWW2QREMM7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Elements
+const registerBtn = document.getElementById("registerBtn");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const forgotBtn = document.getElementById("forgotBtn");
+const jobForm = document.getElementById("jobForm");
+const jobList = document.getElementById("jobList");
+let unsubscribeJobs = null;
+
+// Prevent auto-login by signing out any existing user
+auth.signOut().catch(err => console.log(err));
+
+// Make logout button functional once
+logoutBtn.addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+    alert("✅ Logged out successfully!");
+  } catch(err) {
+    alert(err.message);
+  }
+});
+
+// Forgot password button
+forgotBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  if(!email){
+    alert("⚠️ Please enter your email first.");
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert("✅ Password reset email sent! Check your inbox.");
+  } catch(err) {
+    alert(err.message);
+  }
+});
+
+// Register Recruiter
+registerBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("✅ Registered successfully! Please login.");
+  } catch(err){ alert(err.message); }
+});
+
+// Login
+loginBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("✅ Logged in!");
+  } catch(err){ alert(err.message); }
+});
+
+// Listen for login state
+onAuthStateChanged(auth, user => {
+  if(user){
+    document.getElementById("authBox").style.display = "none";
+    jobForm.classList.remove("hidden");
+    logoutBtn.classList.remove("hidden"); // show logout
+    loadJobs(user.email.toLowerCase());
+  } else {
+    document.getElementById("authBox").style.display = "block";
+    jobForm.classList.add("hidden");
+    logoutBtn.classList.add("hidden"); // hide logout
+    jobList.innerHTML = "";
+    if(unsubscribeJobs) unsubscribeJobs();
+  }
+});
+
+// Post Job
+jobForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if(!user){ alert("Please login first"); return; }
+  
+  const job = {
+    title: document.getElementById("jobTitle").value,
+    company: document.getElementById("company").value,
+    location: document.getElementById("location").value,
+    type: document.getElementById("jobType").value,
+    description: document.getElementById("description").value,
+    recruiter: user.email,
+    visible: true,
+    createdAt: new Date()
+  };
+  
+  await addDoc(collection(db, "jobs"), job);
+  alert("✅ Job posted successfully!");
+  jobForm.reset();
+});
+
+// Load recruiter jobs live
+function loadJobs(email){
+  const q = query(collection(db, "jobs"), where("recruiter", "==", email));
+  unsubscribeJobs = onSnapshot(q, snapshot => {
+    jobList.innerHTML = "";
+    snapshot.forEach(docSnap => {
+      const job = docSnap.data();
+      const li = document.createElement("li");
+      li.className = "job-card";
+      li.innerHTML = `
+        <span><strong>${job.title}</strong> (${job.type})</span>
+        <div>
+          <button class="toggle">${job.visible ? 'Hide' : 'Show'}</button>
+          <button class="viewApps">View Applications</button>
+          <button class="delete">Delete</button>
+        </div>
+      `;
+
+      // Toggle visibility
+      li.querySelector(".toggle").onclick = async () => {
+        await updateDoc(doc(db, "jobs", docSnap.id), { visible: !job.visible });
+      };
+
+      // View Applications
+      li.querySelector(".viewApps").onclick = async () => {
+        const qApps = query(collection(db,"applications"), where("jobId","==",docSnap.id));
+        const snapApps = await getDocs(qApps);
+        const appList = document.getElementById("applicationsList");
+        appList.innerHTML = "";
+        snapApps.forEach(a => {
+          const d = a.data();
+          appList.innerHTML += `<li>${d.name} (${d.email}) - <a href="${d.cvURL}" target="_blank">CV</a></li>`;
+        });
+        document.getElementById("appModal").style.display = "flex";
+      };
+
+      // Delete job
+      li.querySelector(".delete").onclick = async () => {
+        if(confirm("Delete this job?")) await deleteDoc(doc(db,"jobs",docSnap.id));
+      };
+
+      jobList.appendChild(li);
+    });
+  });
+}
+
+   
+</script>
+
+</body>
+</html>
