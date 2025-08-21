@@ -189,18 +189,19 @@ loginBtn.addEventListener("click", async () => {
 // Listen for login state
 onAuthStateChanged(auth, user => {
   if(user){
-    document.getElementById("authBox").style.display = "none";
-    jobForm.classList.remove("hidden");
-    logoutBtn.style.display = "inline-block"; // show logout
+    document.getElementById("authBox").classList.add("hidden");  // hide login form
+    jobForm.classList.remove("hidden");                          // show job form
+    logoutBtn.classList.remove("hidden");                        // show logout
     loadJobs(user.email.toLowerCase());
   } else {
-    document.getElementById("authBox").style.display = "block";
-    jobForm.classList.add("hidden");
-    logoutBtn.style.display = "none"; // hide logout
+    document.getElementById("authBox").classList.remove("hidden"); // show login form
+    jobForm.classList.add("hidden");                               // hide job form
+    logoutBtn.classList.add("hidden");                             // hide logout
     jobList.innerHTML = "";
     if(unsubscribeJobs) unsubscribeJobs();
   }
 });
+
 
 // Post Job
 jobForm.addEventListener("submit", async e => {
@@ -276,4 +277,5 @@ function loadJobs(email){
 
 </body>
 </html>
+
 
