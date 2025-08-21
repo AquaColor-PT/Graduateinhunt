@@ -92,7 +92,7 @@
 </div>
 
 <script type="module">
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -141,7 +141,7 @@ let unsubscribeJobs = null;
 // Prevent auto-login by signing out any existing user
 auth.signOut().catch(err => console.log(err));
 
-// Make logout button functional once
+// Logout button (functional once, stays attached)
 logoutBtn.addEventListener("click", async () => {
   try {
     await signOut(auth);
@@ -151,7 +151,7 @@ logoutBtn.addEventListener("click", async () => {
   }
 });
 
-// Forgot password button
+// Forgot password
 forgotBtn.addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   if(!email){
@@ -191,12 +191,12 @@ onAuthStateChanged(auth, user => {
   if(user){
     document.getElementById("authBox").style.display = "none";
     jobForm.classList.remove("hidden");
-    logoutBtn.classList.remove("hidden"); // show logout
+    logoutBtn.style.display = "inline-block"; // show logout
     loadJobs(user.email.toLowerCase());
   } else {
     document.getElementById("authBox").style.display = "block";
     jobForm.classList.add("hidden");
-    logoutBtn.classList.add("hidden"); // hide logout
+    logoutBtn.style.display = "none"; // hide logout
     jobList.innerHTML = "";
     if(unsubscribeJobs) unsubscribeJobs();
   }
@@ -270,8 +270,10 @@ function loadJobs(email){
   });
 }
 
+
    
 </script>
 
 </body>
 </html>
+
